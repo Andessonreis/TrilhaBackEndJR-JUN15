@@ -13,42 +13,45 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Configuration class for Spring Security settings.
+ * Configuration class for Web Security.
  */
 @Configuration
 @EnableWebSecurity
-public class WebSecurityConfig {
+public class WebSecurityConfig implements WebMvcConfigurer {
 
     @Autowired
-    private SecurityFilter securityFilter;
+    private JWTLoginFilter jwtLoginFilter;
 
     /**
-     * Configures the security filter chain for HTTP requests.
+     * Configures the security filter chain with customizations.
      *
-     * @param http The HttpSecurity object to configure security settings.
-     * @return A SecurityFilterChain instance configured with custom security settings.
-     * @throws Exception If an error occurs while configuring security.
+     * @param http the HttpSecurity object to configure
+     * @return the SecurityFilterChain configured
+     * @throws Exception if an error occurs during configuration
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(authorize -> authorize
+            .authorizeRequests(authorize -> authorize
+                .requestMatchers(HttpMethod.POST, "/api/v1/login").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/users/user").permitAll()
+                .requestMatchers("/h2-console/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class); 
-        
+            .headers(headers -> headers.frameOptions().sameOrigin())  // Para permitir que o console H2 seja exibido em um iframe
+            .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
     /**
-     * Configures the password encoder for encoding and verifying passwords.
+     * Configures the password encoder used for encoding passwords.
      *
-     * @return A PasswordEncoder instance (BCryptPasswordEncoder).
+     * @return the PasswordEncoder instance
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -56,11 +59,11 @@ public class WebSecurityConfig {
     }
 
     /**
-     * Configures the authentication manager to authenticate users.
+     * Configures the authentication manager.
      *
-     * @param authenticationConfiguration The AuthenticationConfiguration object for retrieving the authentication manager.
-     * @return An AuthenticationManager instance.
-     * @throws Exception If an error occurs while retrieving the authentication manager.
+     * @param authenticationConfiguration the AuthenticationConfiguration object
+     * @return the AuthenticationManager instance
+     * @throws Exception if an error occurs during configuration
      */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
