@@ -1,4 +1,4 @@
-package br.com.andesson.taskmanager.domain.task;
+package br.com.andesson.taskmanager.domain.task.model;
 
 import java.time.LocalDateTime;
 import br.com.andesson.taskmanager.domain.status.Status;
