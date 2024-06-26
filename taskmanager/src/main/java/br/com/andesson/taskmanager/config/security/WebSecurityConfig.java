@@ -39,11 +39,11 @@ public class WebSecurityConfig implements WebMvcConfigurer {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeRequests(authorize -> authorize
                 .requestMatchers(HttpMethod.POST, "/api/v1/login").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/users/user").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/register").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .headers(headers -> headers.frameOptions().sameOrigin())  // Para permitir que o console H2 seja exibido em um iframe
+            .headers(headers -> headers.frameOptions().sameOrigin())
             .addFilterBefore(jwtLoginFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
